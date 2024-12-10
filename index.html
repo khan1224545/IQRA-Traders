@@ -383,7 +383,7 @@
           <tr>
             <td class="border border-green-600" colspan="4">
               <div class="my-1 text-right pr-2">
-                <p class="font-bold">Paid Amount</p>
+                <p class="font-bold">Balance Amount</p>
               </div>
             </td>
             <td class="border border-green-600">
@@ -396,7 +396,7 @@
           <tr>
             <td class="border border-green-600" colspan="4">
               <div class="my-1 text-right pr-2">
-                <p class="font-bold">Balance Amount</p>
+                <p class="font-bold">Grand Total</p>
               </div>
             </td>
             <td class="border border-green-600">
@@ -488,7 +488,7 @@
           return;
         }
 
-        const result = totalAmount - paidAmount;
+        const result = totalAmount + paidAmount;
         balanceAmountInput.value = result > 0 ? result.toFixed(2) : "";
       }
 
