@@ -17,6 +17,8 @@
     <style>
       body {
         font-family: "Roboto", sans-serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
       .hindi-font {
         font-family: "Noto Sans Devanagari", sans-serif;
@@ -41,13 +43,43 @@
         .print {
           display: none;
         }
+
+        input {
+          background: transparent;
+        }
+
+        table {
+          position: relative;
+        }
+
+        table::before {
+          content: "SAFIYA";
+          position: absolute;
+          top: 23%;
+          left: 5%;
+          transform: translate(-50%, -50%);
+          font-size: 150px;
+          color: rgba(0, 0, 0, 0.1);
+          z-index: -1;
+          pointer-events: none;
+          white-space: nowrap;
+          transform: rotate(45deg);
+        }
       }
     </style>
   </head>
-  <body class="p-8">
-    <div class="bg-white rounded p-6 max-w-3xl mx-auto">
+  <body class="px-8">
+    <div class="rounded p-6 max-w-3xl mx-auto">
       <div class="text-center">
-        <h1 class="text-green-600 font-bold text-4xl mb-2">
+        <div class="flex justify-between">
+          <img
+            class="w-[120px] h-[120px] mb-[-70px] ml-[-10px]"
+            style="transform: scaleX(-1); z-index: -1"
+            src="chicken 2.jpeg"
+          />
+          <img class="w-[120px] h-[120px] mb-[-70px]" src="chicken 2.jpeg" />
+        </div>
+        <h1 class="text-green-600 font-bold text-5xl mb-2">
           IQRA <span class="bg-green-600 text-white px-1">TRADERS</span>
         </h1>
         <div class="text-md text-green-600 font-[500]">
@@ -383,12 +415,25 @@
           <tr>
             <td class="border border-green-600" colspan="4">
               <div class="my-1 text-right pr-2">
-                <p class="font-bold">Balance Amount</p>
+                <p class="font-bold">Paid Amount</p>
               </div>
             </td>
             <td class="border border-green-600">
               <input
                 class="table-input bg-transparent paid-amount-input"
+                type="number"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td class="border border-green-600" colspan="4">
+              <div class="my-1 text-right pr-2">
+                <p class="font-bold">Balance Amount</p>
+              </div>
+            </td>
+            <td class="border border-green-600">
+              <input
+                class="table-input bg-transparent balance-amount-input"
                 type="number"
               />
             </td>
@@ -402,7 +447,7 @@
             <td class="border border-green-600">
               <input
                 disabled
-                class="table-input bg-transparent balance-amount-input"
+                class="table-input bg-transparent grand-total-input"
                 type="number"
               />
             </td>
@@ -423,12 +468,14 @@
         <button
           type="button"
           class="bg-green-300 border border-green-600 text-md text-black px-2"
-          onClick="window.print()"
+          onclick="window.print()"
         >
           Print
         </button>
       </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script>
       const dateInput = document.querySelector("#date");
       const today = new Date();
@@ -445,8 +492,11 @@
       const balanceAmountInput = document.querySelector(
         ".balance-amount-input"
       );
+      const grandTotalInput = document.querySelector(".grand-total-input");
+
       const nameInput = document.querySelector(".name-input");
 
+      // calculating amount
       weightInputs.forEach((weightInput) => {
         weightInput.addEventListener("input", calculateAmount);
       });
@@ -460,36 +510,45 @@
           const rate = rateInputs[index].value;
           if (!isNaN(rate) && !isNaN(weight)) {
             const result = weight * rate;
-            amountInputs[index].value = result == 0 ? "" : result;
+            amountInputs[index].value = result == 0 ? "" : result.toFixed(2);
           }
           calculateTotal();
         });
       }
+
+      // calculating total amount
 
       function calculateTotal() {
         const result = Array.from(amountInputs).reduce((acc, input) => {
           const amount = parseFloat(input.value) || 0;
           return amount + acc;
         }, 0);
-        console.log(result);
 
-        totalAmountInput.value = result == 0 ? "" : result;
+        totalAmountInput.value = result == 0 ? "" : result.toFixed(2);
       }
 
-      paidAmountInput.addEventListener("input", calculateBalance);
-      paidAmountInput.addEventListener("blur", calculateBalance);
+      // calculating GrandTotal
 
-      function calculateBalance() {
+      paidAmountInput.addEventListener("input", calculateGrandTotal);
+      balanceAmountInput.addEventListener("input", calculateGrandTotal);
+      totalAmountInput.addEventListener("input", calculateGrandTotal);
+
+      function calculateGrandTotal() {
         const paidAmount = parseFloat(paidAmountInput.value) || 0;
         const totalAmount = parseFloat(totalAmountInput.value) || 0;
+        const balanceAmount = parseFloat(balanceAmountInput.value || 0);
 
-        if (paidAmountInput.value.trim() === "") {
-          balanceAmountInput.value = "";
+        if (
+          paidAmountInput.value.trim() === "" ||
+          balanceAmountInput.value.trim() === ""
+        ) {
+          grandTotalInput.value = "";
           return;
         }
 
-        const result = totalAmount + paidAmount;
-        balanceAmountInput.value = result > 0 ? result.toFixed(2) : "";
+        const current_balance = totalAmount - paidAmount;
+        const result = current_balance + balanceAmount;
+        grandTotalInput.value = result > 0 ? result.toFixed(2) : "";
       }
 
       nameInput.addEventListener("input", changeTitle);
@@ -499,6 +558,16 @@
           document.title = nameInput.value;
         }
       }
+
+      // function print() {
+      //   // html2canvas(document.body, { background: true }).then((canvas) => {
+      //   //   const imgData = canvas.toDataURL("image/png");
+      //   //   const pdf = new jsPDF();
+      //   //   pdf.addImage(imgData, "PNG", 0, 0);
+      //   //   pdf.save(document.title + ".pdf");
+      //   // });
+      //   window.print();
+      // }
     </script>
   </body>
 </html>
